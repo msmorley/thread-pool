@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BS_THREAD_POOL_HPP
+#define BS_THREAD_POOL_HPP
 
 /**
  * @file BS_thread_pool.hpp
@@ -80,7 +81,7 @@ namespace this_thread {
     /**
      * @brief A type returned by `BS::this_thread::get_index()` which can optionally contain the index of a thread, if that thread belongs to a `BS::thread_pool`. Otherwise, it will contain no value.
      */
-    using optional_index = std::optional<size_t>;
+	using optional_index = std::optional<size_t>;
 
     /**
      * @brief A type returned by `BS::this_thread::get_pool()` which can optionally contain the pointer to the pool that owns a thread, if that thread belongs to a `BS::thread_pool`. Otherwise, it will contain no value.
@@ -115,7 +116,7 @@ namespace this_thread {
     /**
      * @brief A helper class to store information about the thread pool that owns the current thread.
      */
-    class [[nodiscard]] thread_info_pool
+	class [[nodiscard]] thread_info_pool
     {
         friend class BS::thread_pool;
 
@@ -140,12 +141,12 @@ namespace this_thread {
     /**
      * @brief A `thread_local` object used to obtain information about the index of the current thread.
      */
-    inline thread_local thread_info_index get_index;
+	inline thread_local thread_info_index get_index;
 
-    /**
-     * @brief A `thread_local` object used to obtain information about the thread pool that owns the current thread.
-     */
-    inline thread_local thread_info_pool get_pool;
+	/**
+	 * @brief A `thread_local` object used to obtain information about the thread pool that owns the current thread.
+	 */
+	inline thread_local thread_info_pool get_pool;
 } // namespace this_thread
 
 /**
@@ -354,53 +355,53 @@ public:
      */
     [[nodiscard]] size_t get_tasks_queued() const
     {
-        const std::scoped_lock tasks_lock(tasks_mutex);
-        return tasks.size();
-    }
+		const std::scoped_lock tasks_lock(tasks_mutex);
+		return tasks.size();
+	}
 
-    /**
-     * @brief Get the number of tasks currently being executed by the threads.
-     *
-     * @return The number of running tasks.
-     */
-    [[nodiscard]] size_t get_tasks_running() const
-    {
-        const std::scoped_lock tasks_lock(tasks_mutex);
-        return tasks_running;
-    }
+	/**
+	 * @brief Get the number of tasks currently being executed by the threads.
+	 *
+	 * @return The number of running tasks.
+	 */
+	[[nodiscard]] size_t get_tasks_running() const
+	{
+		const std::scoped_lock tasks_lock(tasks_mutex);
+		return tasks_running;
+	}
 
-    /**
-     * @brief Get the total number of unfinished tasks: either still waiting in the queue, or running in a thread. Note that `get_tasks_total() == get_tasks_queued() + get_tasks_running()`.
-     *
-     * @return The total number of tasks.
-     */
-    [[nodiscard]] size_t get_tasks_total() const
-    {
-        const std::scoped_lock tasks_lock(tasks_mutex);
-        return tasks_running + tasks.size();
-    }
+	/**
+	 * @brief Get the total number of unfinished tasks: either still waiting in the queue, or running in a thread. Note that `get_tasks_total() == get_tasks_queued() + get_tasks_running()`.
+	 *
+	 * @return The total number of tasks.
+	 */
+	[[nodiscard]] size_t get_tasks_total() const
+	{
+		const std::scoped_lock tasks_lock(tasks_mutex);
+		return tasks_running + tasks.size();
+	}
 
-    /**
-     * @brief Get the number of threads in the pool.
-     *
-     * @return The number of threads.
-     */
-    [[nodiscard]] concurrency_t get_thread_count() const
-    {
-        return thread_count;
-    }
+	/**
+	 * @brief Get the number of threads in the pool.
+	 *
+	 * @return The number of threads.
+	 */
+	[[nodiscard]] concurrency_t get_thread_count() const
+	{
+		return thread_count;
+	}
 
-    /**
-     * @brief Get a vector containing the unique identifiers for each of the pool's threads, as obtained by `std::thread::get_id()`.
-     *
-     * @return The unique thread identifiers.
-     */
-    [[nodiscard]] std::vector<std::thread::id> get_thread_ids() const
-    {
-        std::vector<std::thread::id> thread_ids(thread_count);
-        for (concurrency_t i = 0; i < thread_count; ++i)
-        {
-            thread_ids[i] = threads[i].get_id();
+	/**
+	 * @brief Get a vector containing the unique identifiers for each of the pool's threads, as obtained by `std::thread::get_id()`.
+	 *
+	 * @return The unique thread identifiers.
+	 */
+	[[nodiscard]] std::vector<std::thread::id> get_thread_ids() const
+	{
+		std::vector<std::thread::id> thread_ids(thread_count);
+		for (concurrency_t i = 0; i < thread_count; ++i)
+		{
+			thread_ids[i] = threads[i].get_id();
         }
         return thread_ids;
     }
@@ -432,31 +433,31 @@ public:
      */
     void purge()
     {
-        const std::scoped_lock tasks_lock(tasks_mutex);
-        while (!tasks.empty())
-            tasks.pop();
-    }
+		const std::scoped_lock tasks_lock(tasks_mutex);
+		while (!tasks.empty())
+			tasks.pop();
+	}
 
-    /**
-     * @brief Submit a function with no arguments and no return value into the task queue, with the specified priority. To push a function with arguments, enclose it in a lambda expression. Does not return a future, so the user must use `wait()` or some other method to ensure that the task finishes executing, otherwise bad things will happen.
-     *
-     * @tparam F The type of the function.
-     * @param task The function to push.
-     * @param priority The priority of the task. Should be between -32,768 and 32,767 (a signed 16-bit integer). The default is 0. Only enabled if `BS_THREAD_POOL_ENABLE_PRIORITY` is defined.
-     */
-    template <typename F>
-    void detach_task(F&& task BS_THREAD_POOL_PRIORITY_INPUT)
-    {
-        {
-            const std::scoped_lock tasks_lock(tasks_mutex);
-            tasks.emplace(std::forward<F>(task) BS_THREAD_POOL_PRIORITY_OUTPUT);
-        }
-        task_available_cv.notify_one();
-    }
+	/**
+	 * @brief Submit a function with no arguments and no return value into the task queue, with the specified priority. To push a function with arguments, enclose it in a lambda expression. Does not return a future, so the user must use `wait()` or some other method to ensure that the task finishes executing, otherwise bad things will happen.
+	 *
+	 * @tparam F The type of the function.
+	 * @param task The function to push.
+	 * @param priority The priority of the task. Should be between -32,768 and 32,767 (a signed 16-bit integer). The default is 0. Only enabled if `BS_THREAD_POOL_ENABLE_PRIORITY` is defined.
+	 */
+	template <typename F>
+	void detach_task(F&& task BS_THREAD_POOL_PRIORITY_INPUT)
+	{
+		{
+			const std::scoped_lock tasks_lock(tasks_mutex);
+			tasks.emplace(std::forward<F>(task) BS_THREAD_POOL_PRIORITY_OUTPUT);
+		}
+		task_available_cv.notify_one();
+	}
 
-    /**
-     * @brief Parallelize a loop by automatically splitting it into blocks and submitting each block separately to the queue, with the specified priority. The block function takes two arguments, the start and end of the block, so that it is only called only once per block, but it is up to the user make sure the block function correctly deals with all the indices in each block. Does not return a `multi_future`, so the user must use `wait()` or some other method to ensure that the loop finishes executing, otherwise bad things will happen.
-     *
+	/**
+	 * @brief Parallelize a loop by automatically splitting it into blocks and submitting each block separately to the queue, with the specified priority. The block function takes two arguments, the start and end of the block, so that it is only called only once per block, but it is up to the user make sure the block function correctly deals with all the indices in each block. Does not return a `multi_future`, so the user must use `wait()` or some other method to ensure that the loop finishes executing, otherwise bad things will happen.
+	 *
      * @tparam T The type of the indices. Should be a signed or unsigned integer.
      * @tparam F The type of the function to loop through.
      * @param first_index The first index in the loop.
@@ -842,15 +843,15 @@ private:
     void create_threads(const std::function<void()>& init_task)
     {
         {
-            const std::scoped_lock tasks_lock(tasks_mutex);
-            tasks_running = thread_count;
-            workers_running = true;
-        }
-        for (concurrency_t i = 0; i < thread_count; ++i)
-        {
-            threads[i] = std::thread(&thread_pool::worker, this, i, init_task);
-        }
-    }
+			const std::scoped_lock tasks_lock(tasks_mutex);
+			tasks_running = thread_count;
+			workers_running = true;
+		}
+		for (concurrency_t i = 0; i < thread_count; ++i)
+		{
+			threads[i] = std::thread(&thread_pool::worker, this, i, init_task);
+		}
+	}
 
     /**
      * @brief Destroy the threads in the pool.
@@ -858,8 +859,8 @@ private:
     void destroy_threads()
     {
         {
-            const std::scoped_lock tasks_lock(tasks_mutex);
-            workers_running = false;
+			const std::scoped_lock tasks_lock(tasks_mutex);
+			workers_running = false;
         }
         task_available_cv.notify_all();
         for (concurrency_t i = 0; i < thread_count; ++i)
@@ -1138,3 +1139,5 @@ private:
     bool workers_running = false;
 }; // class thread_pool
 } // namespace BS
+
+#endif
