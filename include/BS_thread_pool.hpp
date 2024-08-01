@@ -28,6 +28,7 @@
 #include <utility>            // std::forward, std::move
 #include <vector>             // std::vector
 
+
 /**
  * @brief A namespace used by Barak Shoshany's projects.
  */
@@ -105,6 +106,8 @@ namespace this_thread {
         {
             return index;
         }
+
+        ~thread_info_index() {};
 
     private:
         /**
