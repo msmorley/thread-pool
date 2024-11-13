@@ -1,9 +1,5 @@
 #ifndef BS_THREAD_POOL_HPP
 #define BS_THREAD_POOL_HPP
-<<<<<<< HEAD
-
-=======
->>>>>>> 097aa718f25d44315cadb80b407144ad455ee4f9
 /**
  * @file BS_thread_pool.hpp
  * @author Barak Shoshany (baraksh@gmail.com) (https://baraksh.com)
@@ -1160,8 +1156,4 @@ private:
     bool workers_running = false;
 }; // class thread_pool
 } // namespace BS
-<<<<<<< HEAD
-
-=======
->>>>>>> 097aa718f25d44315cadb80b407144ad455ee4f9
 #endif
